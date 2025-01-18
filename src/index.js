@@ -3,11 +3,14 @@ import boxen from 'boxen';
 import chalk from 'chalk';
 import Conf from 'conf';
 import inquirer from 'inquirer';
+import keytar from 'keytar';
 import pg from 'pg';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 const { Client } = pg;
+const SERVICE_NAME = 'db-cli';
+const ACCOUNT_NAME = 'database';
 
 const config = new Conf({
     projectName: 'db-cli',
@@ -22,21 +25,30 @@ const config = new Conf({
         user: {
             type: 'string',
             default: 'root'
-        },
-        password: {
-            type: 'string'
         }
     }
 });
 
-function getConnectionString(dbName = 'postgres', showPassword = false) {
+async function getPassword() {
+    return await keytar.getPassword(SERVICE_NAME, ACCOUNT_NAME);
+}
+
+async function setPassword(password) {
+    await keytar.setPassword(SERVICE_NAME, ACCOUNT_NAME, password);
+}
+
+async function deletePassword() {
+    await keytar.deletePassword(SERVICE_NAME, ACCOUNT_NAME);
+}
+
+async function getConnectionString(dbName = 'postgres', showPassword = false) {
     const dbConfig = config.store;
-    const password = showPassword ? dbConfig.password : '********';
+    const password = showPassword ? await getPassword() : '********';
     return `postgresql://${dbConfig.user}:${password}@${dbConfig.host}:${dbConfig.port}/${dbName}`;
 }
 
 async function viewConfig(showPassword) {
-    if (!config.has('host') || !config.has('password')) {
+    if (!config.has('host')) {
         console.log(boxen(
             chalk.red('No configuration found. Use "db-cli config" to set up the database connection.'),
             { padding: 1, borderColor: 'red', title: 'Error' }
@@ -44,23 +56,32 @@ async function viewConfig(showPassword) {
         return;
     }
 
-    const connectionString = getConnectionString('postgres', showPassword);
+    const password = await getPassword();
+    if (!password) {
+        console.log(boxen(
+            chalk.red('No password found in secure storage. Use "db-cli config" to set up the database connection.'),
+            { padding: 1, borderColor: 'red', title: 'Error' }
+        ));
+        return;
+    }
+
+    const connectionString = await getConnectionString('postgres', showPassword);
 
     console.log(boxen(
         chalk.blue('Current Configuration:\n\n') +
         chalk.yellow(connectionString) +
-        (showPassword ? '' : '\n\n' + chalk.gray('Use -p flag to show password')),
+        (showPassword ? '' : `\n\n${chalk.gray('Use -p flag to show password')}`),
         { padding: 1, borderColor: 'blue', title: 'Connection Info' }
     ));
 }
 
-async function testConnection(config) {
+async function testConnection(config, password) {
     try {
         const client = new Client({
             host: config.host,
             port: config.port,
             user: config.user,
-            password: config.password,
+            password: password,
             database: 'postgres'
         });
 
@@ -77,7 +98,7 @@ async function testConnection(config) {
 
 async function configureDatabase() {
     // Check if configuration exists
-    const hasExistingConfig = config.has('host') && config.has('password');
+    const hasExistingConfig = config.has('host') && await getPassword();
 
     if (hasExistingConfig) {
         const { shouldOverwrite } = await inquirer.prompt([
@@ -125,12 +146,14 @@ async function configureDatabase() {
         }
     ]);
 
+    const { password, ...configData } = answers;
+
     console.log(boxen(
         chalk.blue('Testing connection...'),
         { padding: 1, borderColor: 'blue', title: 'Info' }
     ));
 
-    const testResult = await testConnection(answers);
+    const testResult = await testConnection(configData, password);
 
     if (!testResult.success) {
         console.log(boxen(
@@ -144,9 +167,13 @@ async function configureDatabase() {
     // Clear existing config before setting new one
     if (hasExistingConfig) {
         config.clear();
+        await deletePassword();
     }
 
-    config.set(answers);
+    // Store non-sensitive config in conf
+    config.set(configData);
+    // Store password in system keychain
+    await setPassword(password);
 
     console.log(boxen(
         chalk.green('Connection successful!\n\n') +
@@ -156,9 +183,18 @@ async function configureDatabase() {
 }
 
 async function addDatabase() {
-    if (!config.has('host') || !config.has('password')) {
+    if (!config.has('host')) {
         console.log(boxen(
             chalk.red('Please configure the database connection first using "db-cli config"'),
+            { padding: 1, borderColor: 'red', title: 'Error' }
+        ));
+        return;
+    }
+
+    const password = await getPassword();
+    if (!password) {
+        console.log(boxen(
+            chalk.red('No password found in secure storage. Use "db-cli config" to set up the database connection.'),
             { padding: 1, borderColor: 'red', title: 'Error' }
         ));
         return;
@@ -181,7 +217,7 @@ async function addDatabase() {
             host: dbConfig.host,
             port: dbConfig.port,
             user: dbConfig.user,
-            password: dbConfig.password,
+            password: password,
             database: 'postgres'
         });
 
@@ -192,7 +228,7 @@ async function addDatabase() {
         console.log(boxen(
             chalk.green('Database created successfully!\n\n') +
             chalk.blue('Connection string:\n') +
-            chalk.yellow(getConnectionString(dbName, true)),
+            chalk.yellow(await getConnectionString(dbName, true)),
             { padding: 1, borderColor: 'green', title: 'Success' }
         ));
     } catch (error) {
@@ -204,7 +240,7 @@ async function addDatabase() {
 }
 
 async function resetConfig() {
-    if (!config.has('host') && !config.has('password')) {
+    if (!config.has('host') && !(await getPassword())) {
         console.log(boxen(
             chalk.yellow('No configuration found to reset'),
             { padding: 1, borderColor: 'yellow', title: 'Info' }
@@ -230,6 +266,7 @@ async function resetConfig() {
     }
 
     config.clear();
+    await deletePassword();
     console.log(boxen(
         chalk.green('Configuration successfully removed'),
         { padding: 1, borderColor: 'green', title: 'Success' }

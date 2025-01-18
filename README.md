@@ -1,7 +1,7 @@
 # DB CLI
 
-> A command-line interface tool for managing PostgreSQL databases with a focus on simplicity and user experience.
-> Its main purpose was to try building a CLI tool in JavaScript.
+> A command-line interface tool for managing PostgreSQL databases with a focus on simplicity, security, and user experience.
+> Features interactive prompts, beautiful terminal output, and secure credential storage.
 
 A JavaScript CLI tool that helps you configure database connections and create new databases with ease.
 
@@ -10,7 +10,7 @@ A JavaScript CLI tool that helps you configure database connections and create n
 - 🔧 Interactive configuration system
 - 🗄️ PostgreSQL database management
 - 🎨 Beautiful terminal output with colors and boxes
-- 🔐 Secure configuration storage
+- 🔐 Secure password storage using system keychain
 - 💾 Connection string generation
 
 ## Prerequisites
@@ -19,6 +19,10 @@ A JavaScript CLI tool that helps you configure database connections and create n
 - Node.js 16.x or higher
 - npm or yarn package manager
 - sudo access (for global installation)
+- System keychain requirements:
+  - Linux: `libsecret` and `gnome-keyring`
+  - macOS: Keychain Access
+  - Windows: Credential Manager
 
 ## Installation
 
@@ -104,11 +108,17 @@ db-cli --help
 
 ## Configuration Storage
 
-Configuration is securely stored using the `conf` package in:
+The tool uses two secure storage mechanisms:
 
-- macOS: `~/Library/Preferences/db-cli-nodejs`
-- Windows: `%APPDATA%/db-cli-nodejs/Config`
-- Linux: `~/.config/db-cli-nodejs`
+1. Non-sensitive configuration (host, port, username) is stored using the `conf` package in:
+   - macOS: `~/Library/Preferences/db-cli-nodejs`
+   - Windows: `%APPDATA%/db-cli-nodejs/Config`
+   - Linux: `~/.config/db-cli-nodejs`
+
+2. Passwords are securely stored in the system's native keychain:
+   - macOS: Keychain Access
+   - Windows: Credential Manager
+   - Linux: Secret Service API (GNOME Keyring/KWallet)
 
 ## Dependencies
 

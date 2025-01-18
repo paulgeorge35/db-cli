@@ -1,6 +1,6 @@
 {
   "name": "@paulgeorge35/db-cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A CLI tool to manage your database",
   "license": "MIT",
   "main": "src/index.js",
@@ -11,10 +11,11 @@
   "dependencies": {
     "boxen": "^8.0.1",
     "chalk": "^5.4.1",
-    "yargs": "^17.7.2",
+    "conf": "^12.0.0",
     "inquirer": "^9.2.15",
+    "keytar": "^7.9.0",
     "pg": "^8.11.3",
-    "conf": "^12.0.0"
+    "yargs": "^17.7.2"
   },
   "bin": {
     "db-cli": "src/index.js"
