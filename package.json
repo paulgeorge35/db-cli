@@ -1,0 +1,29 @@
+{
+  "name": "@paulgeorge35/db-cli",
+  "version": "1.0.0",
+  "description": "A CLI tool to manage your database",
+  "license": "MIT",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "boxen": "^8.0.1",
+    "chalk": "^5.4.1",
+    "yargs": "^17.7.2",
+    "inquirer": "^9.2.15",
+    "pg": "^8.11.3",
+    "conf": "^12.0.0"
+  },
+  "bin": {
+    "db-cli": "src/index.js"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paulgeorge35/db-cli.git"
+  }
+}
