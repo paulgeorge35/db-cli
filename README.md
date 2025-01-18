@@ -1,9 +1,9 @@
 # DB CLI
 
 > A command-line interface tool for managing PostgreSQL databases with a focus on simplicity and user experience.
-> Features interactive prompts and beautiful terminal output using chalk and boxen.
+> Its main purpose was to try building a CLI tool in JavaScript.
 
-A Bun-based CLI tool that helps you configure database connections and create new databases with ease.
+A JavaScript CLI tool that helps you configure database connections and create new databases with ease.
 
 ## Features
 
@@ -15,41 +15,34 @@ A Bun-based CLI tool that helps you configure database connections and create ne
 
 ## Prerequisites
 
-- PostgreSQL server
+- PostgreSQL server installed and running
+- Node.js 16.x or higher
+- npm or yarn package manager
 - sudo access (for global installation)
-- unzip (for bun installation)
 
 ## Installation
 
-1. Install Bun runtime:
+You can install the CLI tool in two ways:
+
+### 1. Via npm (Recommended)
+
 ```bash
-# Install unzip if not already installed
-sudo apt-get update && sudo apt-get install -y unzip
-
-# Install bun
-curl -fsSL https://bun.sh/install | bash
-
-# Add bun to PATH (you might want to add this to your .bashrc)
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
+npm install -g https://github.com/paulgeorge35/db-cli
 ```
 
-2. Clone and install the CLI:
+### 2. From Source
+
 ```bash
 # Clone the repository
 git clone https://github.com/paulgeorge35/db-cli
 cd db-cli
 
 # Install dependencies
-bun install
+npm install
 
-# Build and install globally
-bun run install:global
+# Link the package globally
+npm link
 ```
-This will:
-- Build the project using TypeScript and Bun
-- Create a global symlink using `bun link`
-- Make the CLI globally accessible as `db-cli`
 
 ## Usage
 
@@ -59,29 +52,14 @@ This will:
 db-cli config
 ```
 
-This command manages your database connection settings:
+This interactive command will help you set up your database connection:
 
-1. If an existing configuration is found:
-   - You'll be asked if you want to overwrite it
-   - Selecting 'No' will keep the existing configuration
-   - Selecting 'Yes' will proceed with new configuration
-
-2. You'll be prompted for:
-   - Database host (required)
-   - Port (default: 5432)
-   - Username (default: root)
-   - Password (hidden input)
-
-3. After entering all values:
-   - The tool will attempt to connect to the database
-   - If connection fails:
-     - An error message will be displayed
-     - The configuration will not be saved
-     - You'll need to run the command again with correct credentials
-   - If connection succeeds:
-     - Any existing configuration will be removed
-     - The new configuration will be saved
-     - A success message will be displayed
+```bash
+? Enter database host: localhost
+? Enter port: (5432)
+? Enter username: (root)
+? Enter password: [hidden]
+```
 
 ### Create New Database
 
@@ -89,45 +67,36 @@ This command manages your database connection settings:
 db-cli add db
 ```
 
-This will:
-- Check for existing configuration
-- Prompt for database name
-- Create the database
-- Display the connection string
+Example output:
+```bash
+? Enter database name: myapp_development
+✔ Database created successfully!
+Connection string: postgresql://root:****@localhost:5432/myapp_development
+```
 
 ### View Configuration
 
+View your current database configuration:
+
 ```bash
-# View with hidden password
+# Hide password (default)
 db-cli view
 
-# View with visible password
-db-cli view -p
+# Show password
+db-cli view --show-password
 ```
 
-This command displays the current configuration:
-- Shows the connection string with password hidden by default
-- Use the `-p` or `--show-password` flag to reveal the password
-- Displays an error if no configuration exists
-
 ### Reset Configuration
+
+Remove all saved configuration:
 
 ```bash
 db-cli reset
 ```
 
-This command removes all saved configuration:
-
-1. If no configuration exists:
-   - Shows an info message and exits
-
-2. If configuration exists:
-   - Asks for confirmation with default 'No'
-   - Selecting 'No' cancels the operation
-   - Selecting 'Yes' removes all saved configuration
-   - Shows a success message when complete
-
 ### Help
+
+Get help on available commands:
 
 ```bash
 db-cli --help
@@ -135,38 +104,29 @@ db-cli --help
 
 ## Configuration Storage
 
-The tool securely stores your database configuration using the `conf` package, which saves the data in:
-- macOS: ~/Library/Preferences/db-cli-nodejs
-- Windows: %APPDATA%/db-cli-nodejs/Config
-- Linux: ~/.config/db-cli-nodejs
+Configuration is securely stored using the `conf` package in:
 
-## Development
-
-To run in development mode:
-```bash
-bun run dev
-```
-
-For type checking:
-```bash
-bun run type-check
-```
+- macOS: `~/Library/Preferences/db-cli-nodejs`
+- Windows: `%APPDATA%/db-cli-nodejs/Config`
+- Linux: `~/.config/db-cli-nodejs`
 
 ## Dependencies
 
-- yargs: Command-line argument parsing
-- inquirer: Interactive command prompts
-- chalk: Terminal string styling
-- boxen: Create boxes in terminal
-- pg: PostgreSQL client
-- conf: Configuration storage
+Core dependencies:
+- `boxen` (^8.0.1): Create boxes in terminal
+- `chalk` (^5.4.1): Terminal string styling
+- `yargs` (^17.7.2): Command-line argument parsing
+- `inquirer` (^9.2.15): Interactive command prompts
+- `pg` (^8.11.3): PostgreSQL client
+- `conf` (^12.0.0): Configuration storage
+
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE.md file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contact
 
 Paul George - contact@paulgeorge.dev
 
-Project Link: https://github.com/paulgeorge35/db-cli
+Project Link: [https://github.com/paulgeorge35/db-cli](https://github.com/paulgeorge35/db-cli)
