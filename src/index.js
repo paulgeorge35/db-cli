@@ -239,7 +239,14 @@ async function resetConfig() {
 void yargs(hideBin(process.argv))
     .scriptName('db-cli')
     .command('config', 'Configure database connection', {}, configureDatabase)
-    .command('view', 'View database connection', {}, viewConfig)
+    .command('view', 'View database connection', {
+        p: {
+            alias: 'show-password',
+            type: 'boolean',
+            description: 'Show password in clear text',
+            default: false
+        }
+    }, (argv) => viewConfig(argv.p))
     .command('add db', 'Add a new database', {}, addDatabase)
     .command('reset', 'Remove all saved configuration', {}, resetConfig)
     .demandCommand(1, 'You need to specify a command')
